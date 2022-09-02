@@ -13,7 +13,7 @@ class ByteBankApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData.from(
           colorScheme: ColorScheme.fromSwatch(
-            primarySwatch: Colors.blueGrey,
+            primarySwatch: Colors.purple,
           ),
           textTheme:
               const TextTheme(bodyText2: TextStyle(color: Colors.white))),

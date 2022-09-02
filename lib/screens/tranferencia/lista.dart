@@ -19,7 +19,7 @@ class ListaTransferenciaState extends State<ListaTransferencia> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lista Transferencia')),
+      appBar: AppBar(title: const Text('Nubank da Deep web')),
       body: ListView.builder(
         itemCount: widget._listaTransferecias.length,
         itemBuilder: (
@@ -32,27 +32,30 @@ class ListaTransferenciaState extends State<ListaTransferencia> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          final Future future = Navigator.push(
+          Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) {
                 return const FormularioTransferencia();
               },
             ),
-          );
-          future.then(
-            (tranferenciaRecebida) {
-              if (tranferenciaRecebida != null) {
-                setState(() {
-                  widget._listaTransferecias.add(tranferenciaRecebida);
-                });
-              }
-            },
+          ).then(
+            (tranferenciaRecebida) => _atualiza(tranferenciaRecebida),
           );
         },
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  void _atualiza(tranferenciaRecebida) {
+    if (tranferenciaRecebida != null) {
+      setState(
+        () {
+          widget._listaTransferecias.add(tranferenciaRecebida);
+        },
+      );
+    }
   }
 }
 
@@ -68,8 +71,10 @@ class ItemTransferencia extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: const Icon(Icons.monetization_on),
-        title: Text(_transferecia.valorTotal.toString()),
-        subtitle: Text(_transferecia.numeroConta.toString()),
+        title: Text('Valor: ${_transferecia.valorTotal} R\$'),
+        subtitle: Text('Conta: ${_transferecia.numeroConta}'),
+        tileColor: Colors.purple,
+        textColor: Colors.white,
       ),
     );
   }
