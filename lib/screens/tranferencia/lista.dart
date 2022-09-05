@@ -75,6 +75,7 @@ class ItemTransferencia extends StatelessWidget {
         subtitle: Text('Conta: ${_transferecia.numeroConta}'),
         tileColor: Colors.purple,
         textColor: Colors.white,
+        iconColor: Colors.white,
       ),
     );
   }
