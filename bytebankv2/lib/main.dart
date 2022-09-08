@@ -6,6 +6,11 @@ void main() {
   // save(Contact(0, 'Lucas', 4343));
   // save(Contact(0, 'Marcela', 2345));
   // save(Contact(0, 'Marcos', 6578));
+  // TransactionDao().save(Transactions(0, 'Beltras', 1098, 4.50)).then((id) {
+  // TransactionDao()
+  //     .findAll()
+  //     .then((transactions) => debugPrint(transactions.toString()));
+  // });
 }
 
 class Bytebank extends StatelessWidget {

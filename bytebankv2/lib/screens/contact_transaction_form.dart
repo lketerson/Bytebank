@@ -1,7 +1,12 @@
+import 'package:bytebankv2/database/dao/transaction_dao.dart';
+import 'package:bytebankv2/models/contacts.dart';
+import 'package:bytebankv2/models/transactions.dart';
+import 'package:bytebankv2/screens/transaction_list.dart';
 import 'package:flutter/material.dart';
 
 class ContactTransactionForm extends StatefulWidget {
-  const ContactTransactionForm({super.key});
+  final Contact contact;
+  const ContactTransactionForm({super.key, required this.contact});
 
   @override
   State<ContactTransactionForm> createState() => _ContactTransactionFormState();
@@ -10,6 +15,9 @@ class ContactTransactionForm extends StatefulWidget {
 class _ContactTransactionFormState extends State<ContactTransactionForm> {
   final TextEditingController _transferAmmountController =
       TextEditingController();
+
+  final TransactionDao _transactionDao = TransactionDao();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,7 +40,21 @@ class _ContactTransactionFormState extends State<ContactTransactionForm> {
                 width: double.maxFinite,
                 child: ElevatedButton(
                   child: const Text('Confirm'),
-                  onPressed: () {},
+                  onPressed: () {
+                    final double? ammount =
+                        double.tryParse(_transferAmmountController.text);
+                    final Transactions newTransaction =
+                        Transactions.fromContact(0, widget.contact, ammount!);
+                    _transactionDao
+                        .save(newTransaction)
+                        .then((id) => Navigator.pop(context))
+                        .then((value) => Navigator.pop(context))
+                        .then((value) => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const TransactionList(),
+                              ),
+                            ));
+                  },
                 ),
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:bytebankv2/database/dao/contact_dao.dart';
+import 'package:bytebankv2/database/dao/transaction_dao.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -8,6 +9,7 @@ Future<Database> getDatabase() async {
     path,
     onCreate: (db, version) {
       db.execute(ContactDao.tableSql);
+      db.execute(TransactionDao.tableSql);
     },
     version: 1,
     // onDowngrade: onDatabaseDowngradeDelete,

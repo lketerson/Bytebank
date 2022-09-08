@@ -1,3 +1,5 @@
+import 'package:bytebankv2/database/dao/transaction_dao.dart';
+import 'package:bytebankv2/models/transactions.dart';
 import 'package:flutter/material.dart';
 
 class TransactionForm extends StatefulWidget {
@@ -12,6 +14,7 @@ class _TransactionFormState extends State<TransactionForm> {
       TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _accountController = TextEditingController();
+  final TransactionDao _transactionDao = TransactionDao();
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +50,18 @@ class _TransactionFormState extends State<TransactionForm> {
                 width: double.maxFinite,
                 child: ElevatedButton(
                   child: const Text('Confirm'),
-                  onPressed: () {},
+                  onPressed: () {
+                    final String name = _nameController.text;
+                    final int? accountNumber =
+                        int.tryParse(_accountController.text);
+                    final double? ammount =
+                        double.tryParse(_transferAmmountController.text);
+                    final Transactions newTransaction =
+                        Transactions(0, name, accountNumber!, ammount!);
+                    _transactionDao
+                        .save(newTransaction)
+                        .then((id) => Navigator.pop(context));
+                  },
                 ),
               ),
             ),

@@ -78,7 +78,9 @@ class _ContactItem extends StatelessWidget {
         child: InkWell(
           onTap: () {
             Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => const ContactTransactionForm()));
+                builder: (context) => ContactTransactionForm(
+                      contact: contact,
+                    )));
           },
           child: ListTile(
             leading: const Icon(
