@@ -34,9 +34,9 @@ class BackgroundGradient extends StatelessWidget {
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            Color(0xFFBDF5BD),
-            Colors.teal,
             Colors.blue,
+            Colors.teal,
+            Color(0xFFBDF5BD),
           ],
         ),
       ),
@@ -51,7 +51,7 @@ class BackgroundGradient extends StatelessWidget {
           //CARTAO==============================================================
           const UserCard(),
           SizedBox(
-            height: 150,
+            height: 120,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: const [
