@@ -1,5 +1,8 @@
+import 'package:bytebankv3/screens/counter_page.dart';
 import 'package:bytebankv3/screens/dashboard.dart';
+import 'package:bytebankv3/screens/name_form.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
   runApp(const BytebankApp());
@@ -10,6 +13,8 @@ class BytebankApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Bloc.observer = LogObserver();
+
     return MaterialApp(
       theme: ThemeData(
         buttonTheme: ButtonThemeData(
@@ -20,7 +25,15 @@ class BytebankApp extends StatelessWidget {
             .copyWith(primary: Colors.green[900])
             .copyWith(secondary: Colors.blueAccent[700]),
       ),
-      home: const Dashboard(),
+      home: const NameContainer(),
     );
+  }
+}
+
+class LogObserver extends BlocObserver {
+  @override
+  void onChange(BlocBase cubit, Change change) {
+    print("${cubit.runtimeType} > $change");
+    super.onChange(cubit, change);
   }
 }

@@ -19,7 +19,7 @@ class _ContactsListState extends State<ContactsList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transfer'),
+        title: const Text('Contacts'),
       ),
       body: FutureBuilder<List<Contact>>(
         initialData: const [],
