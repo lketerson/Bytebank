@@ -8,5 +8,5 @@ import 'interceptors/logging_interceptor.dart';
 
 final Client client = InterceptedClient.build(
     interceptors: [LoggingInterceptor()],
-    requestTimeout: const Duration(seconds: 5));
+    requestTimeout: const Duration(seconds: 10));
 const String baseUrl = 'http://192.168.0.78:8080/transactions';

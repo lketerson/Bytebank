@@ -1,6 +1,4 @@
-import 'package:bytebankv3/screens/counter_page.dart';
 import 'package:bytebankv3/screens/dashboard.dart';
-import 'package:bytebankv3/screens/name_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -25,15 +23,15 @@ class BytebankApp extends StatelessWidget {
             .copyWith(primary: Colors.green[900])
             .copyWith(secondary: Colors.blueAccent[700]),
       ),
-      home: const NameContainer(),
+      home: DashboardContainer(),
     );
   }
 }
 
 class LogObserver extends BlocObserver {
   @override
-  void onChange(BlocBase cubit, Change change) {
-    print("${cubit.runtimeType} > $change");
-    super.onChange(cubit, change);
+  void onChange(BlocBase bloc, Change change) {
+    print("${bloc.runtimeType} > $change");
+    super.onChange(bloc, change);
   }
 }

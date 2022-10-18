@@ -1,34 +1,125 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
-
+import 'package:bytebankv3/components/container.dart';
 import 'package:bytebankv3/components/loading_circle.dart';
-import 'package:bytebankv3/components/response_dialog.dart';
+
 import 'package:bytebankv3/components/transaction_auth_dialog.dart';
 import 'package:bytebankv3/http/webclients/transaction_webclient.dart';
 import 'package:bytebankv3/models/contact.dart';
 import 'package:bytebankv3/models/transaction.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
-class TransactionForm extends StatefulWidget {
-  final Contact contact;
-
-  const TransactionForm(this.contact, {super.key});
-
-  @override
-  State<TransactionForm> createState() => _TransactionFormState();
+@immutable
+abstract class TransactionFormState {
+  const TransactionFormState();
 }
 
-class _TransactionFormState extends State<TransactionForm> {
-  final TextEditingController _valueController = TextEditingController();
-  final TransactionWebClient _webClient = TransactionWebClient();
-  final String transactionId = const Uuid().v4();
+@immutable
+class SendingTransactionFormState extends TransactionFormState {
+  const SendingTransactionFormState();
+}
 
-  bool _sending = false;
+@immutable
+class ShowTransactionFormState extends TransactionFormState {
+  const ShowTransactionFormState();
+}
+
+@immutable
+class SentTransactionFormState extends TransactionFormState {
+  const SentTransactionFormState();
+}
+
+@immutable
+class FatalErrorTransactionFormState extends TransactionFormState {
+  final String _message;
+  const FatalErrorTransactionFormState(this._message);
+}
+
+class TransactionFormCubit extends Cubit<TransactionFormState> {
+  TransactionFormCubit() : super(const ShowTransactionFormState());
+
+  void save(Transaction transactionCreated, String password,
+      BuildContext context) async {
+    emit(const SendingTransactionFormState());
+    await send(transactionCreated, password, context);
+  }
+
+  send(Transaction transactionCreated, String password,
+      BuildContext context) async {
+    try {
+      await TransactionWebClient()
+          .save(transactionCreated, password)
+          .then((transaction) => emit(SentTransactionFormState()));
+    } on HttpException catch (e) {
+      emit(FatalErrorTransactionFormState(e.toString()));
+    } on TimeoutException catch (e) {
+      emit(FatalErrorTransactionFormState(e.toString()));
+    } on Exception catch (e) {
+      emit(FatalErrorTransactionFormState(e.toString()));
+    } finally {
+      emit(FatalErrorTransactionFormState("Unknown Error"));
+    }
+  }
+}
+
+class TransactionFormContainer extends BlocContainer {
+  final Contact _contact;
+
+  TransactionFormContainer(this._contact);
+
   @override
   Widget build(BuildContext context) {
-    print('=====//=====$transactionId=====/=====');
+    return BlocProvider<TransactionFormCubit>(
+      create: (BuildContext context) => TransactionFormCubit(),
+      child: BlocListener<TransactionFormCubit, TransactionFormState>(
+          listener: (context, state) {
+            if (state is SentTransactionFormState) {
+              Navigator.pop(context);
+            }
+          },
+          child: TransactionForm(_contact)),
+    );
+  }
+}
+
+class TransactionForm extends StatelessWidget {
+  final Contact _contact;
+
+  const TransactionForm(this._contact, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TransactionFormCubit, TransactionFormState>(
+      builder: (context, state) {
+        if (state is ShowTransactionFormState) {
+          return _BasicForm(_contact);
+        }
+        if (state is SendingTransactionFormState ||
+            state is SentTransactionFormState) {
+          return ProgressWindow();
+        }
+        if (state is FatalErrorTransactionFormState) {
+          return ErrorView(
+            message: state._message,
+          );
+        }
+        return ErrorView(message: "Unknown error");
+      },
+    );
+  }
+}
+
+class _BasicForm extends StatelessWidget {
+  final Contact _contact;
+  final String transactionId = const Uuid().v4();
+  final TextEditingController _valueController = TextEditingController();
+  _BasicForm(this._contact);
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('New transaction'),
@@ -39,14 +130,8 @@ class _TransactionFormState extends State<TransactionForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Visibility(
-                visible: _sending,
-                child: const LoadingCircle(
-                  label: 'Sending',
-                ),
-              ),
               Text(
-                widget.contact.name,
+                _contact.name,
                 style: const TextStyle(
                   fontSize: 24.0,
                 ),
@@ -54,7 +139,7 @@ class _TransactionFormState extends State<TransactionForm> {
               Padding(
                 padding: const EdgeInsets.only(top: 16.0),
                 child: Text(
-                  widget.contact.accountNumber.toString(),
+                  _contact.accountNumber.toString(),
                   style: const TextStyle(
                     fontSize: 32.0,
                     fontWeight: FontWeight.bold,
@@ -75,29 +160,28 @@ class _TransactionFormState extends State<TransactionForm> {
                 padding: const EdgeInsets.only(top: 16.0),
                 child: SizedBox(
                   width: double.maxFinite,
-                  child: Visibility(
-                    visible: !_sending,
-                    child: ElevatedButton(
-                      child: const Text('Transfer'),
-                      onPressed: () {
-                        final double? value =
-                            double.tryParse(_valueController.text);
-                        if (value != null && value > 0) {
-                          final transactionCreated =
-                              Transaction(transactionId, value, widget.contact);
-                          showDialog(
-                            context: context,
-                            builder: (contextDialog) {
-                              return TransactionAuthDialog(
-                                onConfirm: (String password) {
-                                  _save(transactionCreated, password, context);
-                                },
-                              );
-                            },
-                          );
-                        }
-                      },
-                    ),
+                  child: ElevatedButton(
+                    child: const Text('Transfer'),
+                    onPressed: () {
+                      final double? value =
+                          double.tryParse(_valueController.text);
+                      if (value != null && value > 0) {
+                        final transactionCreated =
+                            Transaction(transactionId, value, _contact);
+                        showDialog(
+                          context: context,
+                          builder: (contextDialog) {
+                            return TransactionAuthDialog(
+                              onConfirm: (String password) {
+                                BlocProvider.of<TransactionFormCubit>(context)
+                                    .save(
+                                        transactionCreated, password, context);
+                              },
+                            );
+                          },
+                        );
+                      }
+                    },
                   ),
                 ),
               )
@@ -106,57 +190,5 @@ class _TransactionFormState extends State<TransactionForm> {
         ),
       ),
     );
-  }
-
-  void _save(
-    Transaction transactionCreated,
-    String password,
-    BuildContext context,
-  ) async {
-    setState(() {
-      _sending = true;
-    });
-    await _send(transactionCreated, password, context);
-  }
-
-  Future<void> _showSuccesMsg(BuildContext context) async {
-    await showDialog(
-      context: context,
-      builder: (contextDialog) {
-        return const SuccessDialog('Success');
-      },
-    );
-    Navigator.pop(context);
-  }
-
-  Future<void> _send(Transaction transactionCreated, String password,
-      BuildContext context) async {
-    try {
-      await _webClient.save(transactionCreated, password);
-
-      _showSuccesMsg(context);
-    } on TimeoutException catch (e) {
-      _showFailureMsg(context, message: 'TIMEOUT');
-    } on HttpException catch (e) {
-      _showFailureMsg(context, message: e.message);
-    } on Exception catch (e) {
-      _showFailureMsg(context);
-    } finally {
-      setState(() {
-        _sending = false;
-      });
-    }
-  }
-
-  void _showFailureMsg(BuildContext context, {String? message}) {
-    showDialog(
-        context: context,
-        builder: (contextDialog) {
-          if (message != null) {
-            return FailureDialog(message);
-          } else {
-            return const FailureDialog('Unknown Error');
-          }
-        });
   }
 }
